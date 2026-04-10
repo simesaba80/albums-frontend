@@ -1,5 +1,7 @@
-import { LinkButton } from "@/components/LinkButton";
 import { fetchAlbum } from "@/lib/api";
+import { PageHeading } from "@/components/PageHeading";
+import { LinkButton } from "@/components/LinkButton";
+import { EmptyState } from "@/components/EmptyState";
 
 export default async function AlbumShowPage({
   params,
@@ -11,18 +13,28 @@ export default async function AlbumShowPage({
 
   return (
     <>
-      <h1 className="text-2xl font-bold mb-4">{album.title}</h1>
+      <div style={{ marginBottom: "var(--charcoal-space-35)" }}>
+        <PageHeading>{album.title}</PageHeading>
+      </div>
 
       {album.photos && album.photos.length > 0 ? (
-        <div className="flex flex-wrap gap-3">
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "var(--charcoal-space-25)",
+          }}
+        >
           {album.photos.map((photo) =>
             photo.image_url ? (
               <img
                 key={photo.id}
                 src={photo.image_url}
                 alt={photo.caption ?? ""}
-                className="w-[200px] h-[200px] object-cover"
                 style={{
+                  width: 200,
+                  height: 200,
+                  objectFit: "cover",
                   borderRadius: "var(--charcoal-radius-m)",
                 }}
               />
@@ -30,19 +42,11 @@ export default async function AlbumShowPage({
           )}
         </div>
       ) : (
-        <p
-          style={{
-            color: "var(--charcoal-color-text-tertiary-default)",
-          }}
-        >
-          No photos in this album.
-        </p>
+        <EmptyState message="No photos in this album." />
       )}
 
-      <div className="mt-6">
-        <LinkButton href="/" variant="Default" size="S">
-          Back to Albums
-        </LinkButton>
+      <div style={{ marginTop: "var(--charcoal-space-40)" }}>
+        <LinkButton href="/">Back to Albums</LinkButton>
       </div>
     </>
   );

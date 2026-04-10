@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LinkButton } from "@/components/LinkButton";
 import { Providers } from "./providers";
+import { LinkButton } from "@/components/LinkButton";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,19 +16,29 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className="min-h-screen">
+      <body>
         <Providers>
           <header
-            className="px-6 py-4"
             style={{
-              borderBottom: `1px solid var(--charcoal-color-border-default)`,
+              borderBottom: "1px solid var(--charcoal-color-border-default)",
+              padding: "var(--charcoal-space-30) var(--charcoal-space-40)",
             }}
           >
-            <nav className="flex items-center justify-between max-w-5xl mx-auto">
+            <nav
+              className="page-container"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: 0,
+              }}
+            >
               <Link
                 href="/"
-                className="text-lg font-bold"
-                style={{ color: "var(--charcoal-color-text-default)" }}
+                style={{
+                  fontSize: "var(--charcoal-text-font-size-heading-xxs)",
+                  fontWeight: "var(--charcoal-text-font-weight-bold)",
+                }}
               >
                 Shared Album
               </Link>
@@ -37,7 +47,12 @@ export default function RootLayout({
               </LinkButton>
             </nav>
           </header>
-          <main className="max-w-5xl mx-auto px-6 py-6">{children}</main>
+          <main
+            className="page-container"
+            style={{ paddingBlock: "var(--charcoal-space-40)" }}
+          >
+            {children}
+          </main>
         </Providers>
       </body>
     </html>

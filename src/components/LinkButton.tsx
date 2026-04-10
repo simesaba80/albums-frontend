@@ -4,10 +4,13 @@ import { Button } from "@charcoal-ui/react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+type Variant = "Primary" | "Default" | "Overlay" | "Danger" | "Navigation";
+type Size = "S" | "M";
+
 type LinkButtonProps = {
   href: string;
-  variant?: "Primary" | "Default" | "Overlay" | "Danger" | "Navigation";
-  size?: "S" | "M";
+  variant?: Variant;
+  size?: Size;
   fullWidth?: boolean;
   children: ReactNode;
 };
@@ -16,8 +19,8 @@ export function LinkButton({
   href,
   variant = "Default",
   size = "S",
+  fullWidth,
   children,
-  ...rest
 }: LinkButtonProps) {
   return (
     <Button
@@ -25,7 +28,7 @@ export function LinkButton({
       href={href}
       variant={variant}
       size={size}
-      {...rest}
+      fullWidth={fullWidth}
     >
       {children}
     </Button>

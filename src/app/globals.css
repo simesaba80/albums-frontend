@@ -4,13 +4,113 @@
 
 @config "../../tailwind.config.ts";
 
+/* ── Base ── */
+
 body {
   background-color: var(--charcoal-color-background-default);
   color: var(--charcoal-color-text-default);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--charcoal-text-font-family-sans), -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: var(--charcoal-text-font-size-body);
+  line-height: var(--charcoal-text-line-height-body);
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* ── Typography ── */
+
+.heading-l {
+  font-size: var(--charcoal-text-font-size-heading-s);
+  line-height: var(--charcoal-text-line-height-heading-s);
+  font-weight: var(--charcoal-text-font-weight-bold);
+  color: var(--charcoal-color-text-default);
+}
+
+.heading-m {
+  font-size: var(--charcoal-text-font-size-heading-xs);
+  line-height: var(--charcoal-text-line-height-heading-xs);
+  font-weight: var(--charcoal-text-font-weight-bold);
+  color: var(--charcoal-color-text-default);
+}
+
+.text-secondary {
+  color: var(--charcoal-color-text-secondary-default);
+}
+
+.text-tertiary {
+  color: var(--charcoal-color-text-tertiary-default);
+}
+
+.caption {
+  font-size: var(--charcoal-text-font-size-caption-m);
+  line-height: var(--charcoal-text-line-height-caption-m);
+}
+
+.caption-s {
+  font-size: var(--charcoal-text-font-size-caption-s);
+  line-height: var(--charcoal-text-line-height-caption-s);
+}
+
+/* ── Surfaces ── */
+
+.surface-card {
+  background-color: var(--charcoal-color-container-default);
+  border: 1px solid var(--charcoal-color-border-default);
+  border-radius: var(--charcoal-radius-l);
+  overflow: hidden;
+}
+
+.surface-card:hover {
+  border-color: var(--charcoal-color-border-hover);
+}
+
+.surface-secondary {
+  background-color: var(--charcoal-color-container-secondary-default);
+}
+
+/* ── Dividers ── */
+
+.border-charcoal {
+  border-color: var(--charcoal-color-border-default);
+}
+
+/* ── Field labels (for non-charcoal inputs like file) ── */
+
+.field-label {
+  display: block;
+  font-size: var(--charcoal-text-font-size-caption-m);
+  font-weight: var(--charcoal-text-font-weight-bold);
+  line-height: var(--charcoal-text-line-height-caption-m);
+  color: var(--charcoal-color-text-default);
+  margin-bottom: var(--charcoal-space-20);
+}
+
+/* ── Layout helpers ── */
+
+.page-container {
+  max-width: 960px;
+  margin-inline: auto;
+  padding-inline: var(--charcoal-space-40);
+}
+
+.form-narrow {
+  max-width: 400px;
+  margin-inline: auto;
+}
+
+.form-wide {
+  max-width: 560px;
+}
+
+.stack-l {
+  display: grid;
+  gap: var(--charcoal-space-40);
+}
+
+.stack-m {
+  display: grid;
+  gap: var(--charcoal-space-30);
 }

@@ -9,7 +9,10 @@ import {
 } from "@charcoal-ui/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AlertMessage } from "@/components/AlertMessage";
+import { FileInput } from "@/components/FileInput";
 import { LinkButton } from "@/components/LinkButton";
+import { PageHeading } from "@/components/PageHeading";
 import { createAlbum } from "@/lib/api";
 
 export default function NewAlbumPage() {
@@ -22,8 +25,8 @@ export default function NewAlbumPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  function addPhotoFile(file: File) {
-    setPhotoFiles((prev) => [...prev, file]);
+  function addPhotoFile(file: File | null) {
+    if (file) setPhotoFiles((prev) => [...prev, file]);
   }
 
   function removePhotoFile(index: number) {
@@ -58,18 +61,17 @@ export default function NewAlbumPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold mb-6">New Album</h1>
+      <div style={{ marginBottom: "var(--charcoal-space-40)" }}>
+        <PageHeading>New Album</PageHeading>
+      </div>
 
       {error && (
-        <p
-          className="mb-4 text-sm"
-          style={{ color: "var(--charcoal-color-text-negative-default)" }}
-        >
-          {error}
-        </p>
+        <div style={{ marginBottom: "var(--charcoal-space-30)" }}>
+          <AlertMessage variant="error">{error}</AlertMessage>
+        </div>
       )}
 
-      <form onSubmit={handleSubmit} className="grid gap-6 max-w-[560px]">
+      <form onSubmit={handleSubmit} className="form-wide stack-l">
         <TextField
           label="Title"
           showLabel
@@ -79,33 +81,32 @@ export default function NewAlbumPage() {
           onChange={setTitle}
         />
 
-        <div>
-          <label htmlFor="cover_image" className="block mb-2 text-sm font-bold">
-            Cover image
-          </label>
-          <input
-            type="file"
-            id="cover_image"
-            accept="image/*"
-            className="block w-full text-sm"
-            onChange={(e) => setCoverImage(e.target.files?.[0] ?? null)}
-          />
-        </div>
+        <FileInput
+          id="cover_image"
+          label="Cover image"
+          accept="image/*"
+          onChange={setCoverImage}
+        />
 
         <div>
-          <label htmlFor="photo_image" className="block mb-2 text-sm font-bold">
-            Photos
-          </label>
-          <div className="grid gap-2">
+          <label className="field-label">Photos</label>
+          <div className="stack-m">
             {photoFiles.map((file, index) => (
               <div
                 key={`${file.name}-${index}`}
-                className="flex items-center gap-2"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--charcoal-space-20)",
+                }}
               >
                 <span
-                  className="text-sm truncate flex-1"
+                  className="caption text-secondary"
                   style={{
-                    color: "var(--charcoal-color-text-secondary-default)",
+                    flex: 1,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {file.name}
@@ -122,15 +123,12 @@ export default function NewAlbumPage() {
             ))}
             <input
               type="file"
-              id="photo_image"
               accept="image/*"
-              className="block w-full text-sm"
+              className="caption"
+              style={{ display: "block", width: "100%" }}
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  addPhotoFile(file);
-                  e.target.value = "";
-                }
+                addPhotoFile(e.target.files?.[0] ?? null);
+                e.target.value = "";
               }}
             />
           </div>
@@ -158,13 +156,11 @@ export default function NewAlbumPage() {
           <MenuItem value="private_album">Private album</MenuItem>
         </DropdownSelector>
 
-        <div className="flex gap-3">
+        <div style={{ display: "flex", gap: "var(--charcoal-space-20)" }}>
           <Button type="submit" variant="Primary" disabled={submitting}>
             {submitting ? "Creating..." : "Create Album"}
           </Button>
-          <LinkButton href="/" variant="Default" size="S">
-            Back to Albums
-          </LinkButton>
+          <LinkButton href="/">Back to Albums</LinkButton>
         </div>
       </form>
     </>

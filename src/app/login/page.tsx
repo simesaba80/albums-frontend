@@ -1,10 +1,12 @@
 "use client";
 
-import { Button, TextField } from "@charcoal-ui/react";
-import Link from "next/link";
+import { Button, Clickable, TextField } from "@charcoal-ui/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Link from "next/link";
 import { login } from "@/lib/api";
+import { PageHeading } from "@/components/PageHeading";
+import { AlertMessage } from "@/components/AlertMessage";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,19 +35,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="max-w-sm mx-auto mt-12">
-      <h1 className="text-2xl font-bold mb-6">Sign in</h1>
+    <div className="form-narrow" style={{ marginTop: "var(--charcoal-space-60)" }}>
+      <div style={{ marginBottom: "var(--charcoal-space-40)" }}>
+        <PageHeading>Sign in</PageHeading>
+      </div>
 
       {error && (
-        <p
-          className="mb-4 text-sm"
-          style={{ color: "var(--charcoal-color-text-negative-default)" }}
-        >
-          {error}
-        </p>
+        <div style={{ marginBottom: "var(--charcoal-space-30)" }}>
+          <AlertMessage variant="error">{error}</AlertMessage>
+        </div>
       )}
 
-      <form onSubmit={handleSubmit} className="grid gap-6">
+      <form onSubmit={handleSubmit} className="stack-l">
         <TextField
           label="Email address"
           showLabel
@@ -77,14 +78,10 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <div className="mt-4">
-        <Link
-          href="/passwords/new"
-          className="text-sm"
-          style={{ color: "var(--charcoal-color-text-secondary-default)" }}
-        >
-          Forgot password?
-        </Link>
+      <div style={{ marginTop: "var(--charcoal-space-30)" }}>
+        <Clickable component={Link} href="/passwords/new">
+          <span className="caption text-secondary">Forgot password?</span>
+        </Clickable>
       </div>
     </div>
   );

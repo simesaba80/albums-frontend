@@ -3,6 +3,8 @@
 import { Button, TextField } from "@charcoal-ui/react";
 import { useState } from "react";
 import { requestPasswordReset } from "@/lib/api";
+import { PageHeading } from "@/components/PageHeading";
+import { AlertMessage } from "@/components/AlertMessage";
 
 export default function ForgotPasswordPage() {
   const [emailAddress, setEmailAddress] = useState("");
@@ -32,27 +34,23 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="max-w-sm mx-auto mt-12">
-      <h1 className="text-2xl font-bold mb-6">Forgot your password?</h1>
+    <div className="form-narrow" style={{ marginTop: "var(--charcoal-space-60)" }}>
+      <div style={{ marginBottom: "var(--charcoal-space-40)" }}>
+        <PageHeading>Forgot your password?</PageHeading>
+      </div>
 
       {error && (
-        <p
-          className="mb-4 text-sm"
-          style={{ color: "var(--charcoal-color-text-negative-default)" }}
-        >
-          {error}
-        </p>
+        <div style={{ marginBottom: "var(--charcoal-space-30)" }}>
+          <AlertMessage variant="error">{error}</AlertMessage>
+        </div>
       )}
       {notice && (
-        <p
-          className="mb-4 text-sm"
-          style={{ color: "var(--charcoal-color-text-positive-default)" }}
-        >
-          {notice}
-        </p>
+        <div style={{ marginBottom: "var(--charcoal-space-30)" }}>
+          <AlertMessage variant="success">{notice}</AlertMessage>
+        </div>
       )}
 
-      <form onSubmit={handleSubmit} className="grid gap-6">
+      <form onSubmit={handleSubmit} className="stack-l">
         <TextField
           label="Email address"
           showLabel
