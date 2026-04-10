@@ -1,5 +1,5 @@
 import { createTailwindConfig } from "@charcoal-ui/tailwind-config";
-import { light, dark } from "@charcoal-ui/theme";
+import { dark, light } from "@charcoal-ui/theme";
 
 export default createTailwindConfig({
   version: "v3",

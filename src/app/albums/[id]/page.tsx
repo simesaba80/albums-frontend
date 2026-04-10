@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LinkButton } from "@/components/LinkButton";
 import { fetchAlbum } from "@/lib/api";
 
 export default async function AlbumShowPage({
@@ -21,22 +21,28 @@ export default async function AlbumShowPage({
                 key={photo.id}
                 src={photo.image_url}
                 alt={photo.caption ?? ""}
-                className="w-[200px] h-[200px] object-cover rounded-lg"
+                className="w-[200px] h-[200px] object-cover"
+                style={{
+                  borderRadius: "var(--charcoal-radius-m)",
+                }}
               />
             ) : null,
           )}
         </div>
       ) : (
-        <p className="text-gray-500">No photos in this album.</p>
+        <p
+          style={{
+            color: "var(--charcoal-color-text-tertiary-default)",
+          }}
+        >
+          No photos in this album.
+        </p>
       )}
 
-      <div className="mt-3">
-        <Link
-          href="/"
-          className="inline-block px-3 py-2 rounded-lg border border-gray-300 text-gray-900 bg-white no-underline text-sm"
-        >
+      <div className="mt-6">
+        <LinkButton href="/" variant="Default" size="S">
           Back to Albums
-        </Link>
+        </LinkButton>
       </div>
     </>
   );

@@ -1,9 +1,11 @@
 "use client";
 
+import { Button, TextField } from "@charcoal-ui/react";
 import { useState } from "react";
 import { requestPasswordReset } from "@/lib/api";
 
 export default function ForgotPasswordPage() {
+  const [emailAddress, setEmailAddress] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -12,11 +14,6 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
-
-    const form = e.currentTarget;
-    const emailAddress = (
-      form.elements.namedItem("email_address") as HTMLInputElement
-    ).value;
 
     try {
       const res = await requestPasswordReset(emailAddress);
@@ -36,32 +33,42 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="max-w-sm mx-auto mt-12">
-      <h1 className="text-2xl font-bold mb-4">Forgot your password?</h1>
+      <h1 className="text-2xl font-bold mb-6">Forgot your password?</h1>
 
-      {error && <p className="text-red-600 mb-4">{error}</p>}
-      {notice && <p className="text-green-600 mb-4">{notice}</p>}
+      {error && (
+        <p
+          className="mb-4 text-sm"
+          style={{ color: "var(--charcoal-color-text-negative-default)" }}
+        >
+          {error}
+        </p>
+      )}
+      {notice && (
+        <p
+          className="mb-4 text-sm"
+          style={{ color: "var(--charcoal-color-text-positive-default)" }}
+        >
+          {notice}
+        </p>
+      )}
 
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3.5">
-          <input
-            type="email"
-            name="email_address"
-            required
-            autoFocus
-            autoComplete="username"
-            placeholder="Enter your email address"
-            className="w-full px-2.5 py-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-        <div className="mb-3.5">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full px-3 py-2 rounded-lg text-white bg-gray-900 border border-gray-900 text-sm cursor-pointer disabled:opacity-50"
-          >
-            {submitting ? "Sending..." : "Email reset instructions"}
-          </button>
-        </div>
+      <form onSubmit={handleSubmit} className="grid gap-6">
+        <TextField
+          label="Email address"
+          showLabel
+          type="email"
+          name="email_address"
+          required
+          autoFocus
+          autoComplete="username"
+          placeholder="Enter your email address"
+          value={emailAddress}
+          onChange={setEmailAddress}
+        />
+
+        <Button type="submit" variant="Primary" fullWidth disabled={submitting}>
+          {submitting ? "Sending..." : "Email reset instructions"}
+        </Button>
       </form>
     </div>
   );

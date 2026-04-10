@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LinkButton } from "@/components/LinkButton";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -17,17 +18,23 @@ export default function RootLayout({
     <html lang="ja">
       <body className="min-h-screen">
         <Providers>
-          <header className="border-b border-gray-200 px-6 py-4">
+          <header
+            className="px-6 py-4"
+            style={{
+              borderBottom: `1px solid var(--charcoal-color-border-default)`,
+            }}
+          >
             <nav className="flex items-center justify-between max-w-5xl mx-auto">
-              <Link href="/" className="text-lg font-bold">
+              <Link
+                href="/"
+                className="text-lg font-bold"
+                style={{ color: "var(--charcoal-color-text-default)" }}
+              >
                 Shared Album
               </Link>
-              <Link
-                href="/login"
-                className="text-sm opacity-70 hover:opacity-100"
-              >
+              <LinkButton href="/login" variant="Navigation" size="S">
                 Login
-              </Link>
+              </LinkButton>
             </nav>
           </header>
           <main className="max-w-5xl mx-auto px-6 py-6">{children}</main>

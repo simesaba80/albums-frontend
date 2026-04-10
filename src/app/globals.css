@@ -1,13 +1,16 @@
-/* @import "tailwindcss"; */
-@import "tailwindcss/theme.css";
-@import "tailwindcss/utilities.css";
-/* @import "@charcoal-ui/react/dist/index.css"; */
-@config "@charcoal-ui/tailwind-config";
+@import "tailwindcss";
+@import "@charcoal-ui/react/dist/index.css";
+@import "@charcoal-ui/theme/unstable-css/_variables_light.css";
 
 @config "../../tailwind.config.ts";
 
 body {
-  background: var(--charcoal-surface1);
-  color: var(--charcoal-text1);
+  background-color: var(--charcoal-color-background-default);
+  color: var(--charcoal-color-text-default);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
 }

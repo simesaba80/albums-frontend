@@ -1,12 +1,23 @@
 "use client";
 
-import Link from "next/link";
+import {
+  Button,
+  DropdownSelector,
+  MenuItem,
+  TextArea,
+  TextField,
+} from "@charcoal-ui/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { LinkButton } from "@/components/LinkButton";
 import { createAlbum } from "@/lib/api";
 
 export default function NewAlbumPage() {
   const router = useRouter();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("draft");
+  const [coverImage, setCoverImage] = useState<File | null>(null);
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -24,19 +35,7 @@ export default function NewAlbumPage() {
     setSubmitting(true);
     setError(null);
 
-    const form = e.currentTarget;
     const formData = new FormData();
-
-    const title = (form.elements.namedItem("title") as HTMLInputElement).value;
-    const description = (
-      form.elements.namedItem("description") as HTMLTextAreaElement
-    ).value;
-    const status = (form.elements.namedItem("status") as HTMLSelectElement)
-      .value;
-    const coverImage = (
-      form.elements.namedItem("cover_image") as HTMLInputElement
-    ).files?.[0];
-
     formData.append("album[title]", title);
     formData.append("album[description]", description);
     formData.append("album[status]", status);
@@ -59,59 +58,73 @@ export default function NewAlbumPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold mb-4">New Album</h1>
+      <h1 className="text-2xl font-bold mb-6">New Album</h1>
 
       {error && (
-        <p className="text-red-600 mb-4">{error}</p>
+        <p
+          className="mb-4 text-sm"
+          style={{ color: "var(--charcoal-color-text-negative-default)" }}
+        >
+          {error}
+        </p>
       )}
 
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3.5">
-          <label htmlFor="title" className="block mb-1.5 font-semibold">
-            Title
-          </label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            className="w-full max-w-[560px] px-2.5 py-2 border border-gray-300 rounded-lg"
-          />
-        </div>
+      <form onSubmit={handleSubmit} className="grid gap-6 max-w-[560px]">
+        <TextField
+          label="Title"
+          showLabel
+          name="title"
+          placeholder="Album title"
+          value={title}
+          onChange={setTitle}
+        />
 
-        <div className="mb-3.5">
-          <label htmlFor="cover_image" className="block mb-1.5 font-semibold">
+        <div>
+          <label htmlFor="cover_image" className="block mb-2 text-sm font-bold">
             Cover image
           </label>
           <input
             type="file"
             id="cover_image"
-            name="cover_image"
             accept="image/*"
-            className="w-full max-w-[560px] px-2.5 py-2 border border-gray-300 rounded-lg"
+            className="block w-full text-sm"
+            onChange={(e) => setCoverImage(e.target.files?.[0] ?? null)}
           />
         </div>
 
-        <div className="mb-3.5">
-          <label className="block mb-1.5 font-semibold">Photos</label>
-          <div className="grid gap-2 max-w-[560px]">
+        <div>
+          <label htmlFor="photo_image" className="block mb-2 text-sm font-bold">
+            Photos
+          </label>
+          <div className="grid gap-2">
             {photoFiles.map((file, index) => (
-              <div key={`${file.name}-${index}`} className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 truncate flex-1">
+              <div
+                key={`${file.name}-${index}`}
+                className="flex items-center gap-2"
+              >
+                <span
+                  className="text-sm truncate flex-1"
+                  style={{
+                    color: "var(--charcoal-color-text-secondary-default)",
+                  }}
+                >
                   {file.name}
                 </span>
-                <button
+                <Button
+                  variant="Danger"
+                  size="S"
                   type="button"
                   onClick={() => removePhotoFile(index)}
-                  className="px-3 py-1.5 border border-red-200 rounded-lg text-red-700 bg-white text-sm cursor-pointer"
                 >
                   Remove
-                </button>
+                </Button>
               </div>
             ))}
             <input
               type="file"
+              id="photo_image"
               accept="image/*"
-              className="w-full px-2.5 py-2 border border-gray-300 rounded-lg"
+              className="block w-full text-sm"
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) {
@@ -123,51 +136,37 @@ export default function NewAlbumPage() {
           </div>
         </div>
 
-        <div className="mb-3.5">
-          <label htmlFor="description" className="block mb-1.5 font-semibold">
-            Description
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            className="w-full max-w-[560px] px-2.5 py-2 border border-gray-300 rounded-lg min-h-[120px] resize-y"
-          />
-        </div>
+        <TextArea
+          label="Description"
+          showLabel
+          name="description"
+          placeholder="Album description"
+          value={description}
+          onChange={setDescription}
+          rows={5}
+        />
 
-        <div className="mb-3.5">
-          <label htmlFor="status" className="block mb-1.5 font-semibold">
-            Status
-          </label>
-          <select
-            id="status"
-            name="status"
-            className="w-full max-w-[560px] px-2.5 py-2 border border-gray-300 rounded-lg"
-          >
-            <option value="draft">Draft</option>
-            <option value="public_album">Public album</option>
-            <option value="private_album">Private album</option>
-          </select>
-        </div>
+        <DropdownSelector
+          label="Status"
+          showLabel
+          name="status"
+          value={status}
+          onChange={setStatus}
+        >
+          <MenuItem value="draft">Draft</MenuItem>
+          <MenuItem value="public_album">Public album</MenuItem>
+          <MenuItem value="private_album">Private album</MenuItem>
+        </DropdownSelector>
 
-        <div className="mb-3.5">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="px-3 py-2 rounded-lg text-white bg-gray-900 border border-gray-900 text-sm cursor-pointer disabled:opacity-50"
-          >
+        <div className="flex gap-3">
+          <Button type="submit" variant="Primary" disabled={submitting}>
             {submitting ? "Creating..." : "Create Album"}
-          </button>
+          </Button>
+          <LinkButton href="/" variant="Default" size="S">
+            Back to Albums
+          </LinkButton>
         </div>
       </form>
-
-      <div className="mt-3">
-        <Link
-          href="/"
-          className="inline-block px-3 py-2 rounded-lg border border-gray-300 text-gray-900 bg-white no-underline text-sm"
-        >
-          Back to Albums
-        </Link>
-      </div>
     </>
   );
 }

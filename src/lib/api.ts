@@ -56,6 +56,9 @@ export async function resetPassword(
   return fetch(`${API_URL}/passwords/${token}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password, password_confirmation: passwordConfirmation }),
+    body: JSON.stringify({
+      password,
+      password_confirmation: passwordConfirmation,
+    }),
   });
 }
