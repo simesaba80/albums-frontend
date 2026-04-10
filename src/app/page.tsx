@@ -1,8 +1,16 @@
 import Link from "next/link";
 import { fetchAlbums } from "@/lib/api";
+import type { Album } from "@/lib/types";
 
 export default async function Home() {
-  const albums = await fetchAlbums();
+  let albums: Album[] = [];
+  let fetchError = false;
+
+  try {
+    albums = await fetchAlbums();
+  } catch {
+    fetchError = true;
+  }
 
   return (
     <>
@@ -16,7 +24,11 @@ export default async function Home() {
         </Link>
       </div>
 
-      {albums.length > 0 ? (
+      {fetchError ? (
+        <p className="text-gray-500">
+          Failed to load albums. Please try again later.
+        </p>
+      ) : albums.length > 0 ? (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
           {albums.map((album) => (
             <Link
@@ -49,9 +61,17 @@ export default async function Home() {
           ))}
         </div>
       ) : (
-        <p className="text-gray-500">
-          No albums yet. Create your first album.
-        </p>
+        <div className="text-center py-12">
+          <p className="text-gray-500 mb-4">
+            No albums yet. Create your first album.
+          </p>
+          <Link
+            href="/albums/new"
+            className="inline-block px-4 py-2 rounded-lg text-white bg-gray-900 text-sm"
+          >
+            Create Album
+          </Link>
+        </div>
       )}
     </>
   );

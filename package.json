@@ -10,6 +10,10 @@
     "format": "biome format --write"
   },
   "dependencies": {
+    "@charcoal-ui/icons": "^5.9.0",
+    "@charcoal-ui/react": "^5.9.0",
+    "@charcoal-ui/tailwind-config": "^5.9.0",
+    "@charcoal-ui/theme": "^5.9.0",
     "next": "16.2.2",
     "react": "19.2.4",
     "react-dom": "19.2.4"
