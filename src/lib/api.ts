@@ -26,6 +26,25 @@ export async function createAlbum(formData: FormData): Promise<Album> {
   return res.json();
 }
 
+export async function deleteAlbum(id: number | string): Promise<void> {
+  const res = await fetch(`${API_URL}/albums/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    let message = "Failed to delete album";
+
+    try {
+      const body = await res.json();
+      message = JSON.stringify(body.errors ?? body);
+    } catch {
+      // Keep default message when the response body is not JSON.
+    }
+
+    throw new Error(message);
+  }
+}
+
 export async function login(
   emailAddress: string,
   password: string,

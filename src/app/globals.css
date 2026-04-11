@@ -122,6 +122,102 @@ a {
   border-color: var(--charcoal-color-border-hover);
 }
 
+.album-card {
+  position: relative;
+  overflow: visible;
+}
+
+.album-card.is-menu-open {
+  z-index: 20;
+}
+
+.album-card-media {
+  overflow: hidden;
+  border-radius: var(--charcoal-radius-l) var(--charcoal-radius-l) 0 0;
+}
+
+.album-card-link {
+  display: block;
+}
+
+.album-card-content {
+  position: relative;
+}
+
+.album-card-title-link {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+.album-card-description {
+  line-clamp: 2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.album-card-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.album-card-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--charcoal-color-border-default);
+  background-color: var(--charcoal-color-container-default);
+  color: var(--charcoal-color-text-secondary-default);
+  border-radius: var(--charcoal-radius-full);
+  width: 28px;
+  height: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.album-card-menu-trigger:hover {
+  border-color: var(--charcoal-color-border-hover);
+  color: var(--charcoal-color-text-default);
+}
+
+.album-card-menu-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--charcoal-space-10));
+  z-index: 40;
+  min-width: 136px;
+  border: 1px solid var(--charcoal-color-border-default);
+  border-radius: var(--charcoal-radius-s);
+  background: var(--charcoal-color-container-default);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  padding: var(--charcoal-space-10);
+  display: grid;
+  gap: var(--charcoal-space-5);
+}
+
+.album-card-menu-item {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--charcoal-color-text-default);
+  padding: var(--charcoal-space-10) var(--charcoal-space-15);
+  border-radius: var(--charcoal-radius-xs);
+  cursor: pointer;
+}
+
+.album-card-menu-item:hover {
+  background: var(--charcoal-color-container-secondary-hover);
+}
+
+.album-card-menu-item-danger {
+  color: #ef8080;
+}
+
 .surface-secondary {
   background-color: var(--charcoal-color-container-secondary-default);
 }
