@@ -1,8 +1,11 @@
 "use client";
 
+import { Button, TextField } from "@charcoal-ui/react";
 import { useRouter } from "next/navigation";
-import { useState, use } from "react";
+import { use, useState } from "react";
 import { resetPassword } from "@/lib/api";
+import { PageHeading } from "@/components/PageHeading";
+import { AlertMessage } from "@/components/AlertMessage";
 
 export default function ResetPasswordPage({
   params,
@@ -11,6 +14,8 @@ export default function ResetPasswordPage({
 }) {
   const { token } = use(params);
   const router = useRouter();
+  const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -18,14 +23,6 @@ export default function ResetPasswordPage({
     e.preventDefault();
     setSubmitting(true);
     setError(null);
-
-    const form = e.currentTarget;
-    const password = (
-      form.elements.namedItem("password") as HTMLInputElement
-    ).value;
-    const passwordConfirmation = (
-      form.elements.namedItem("password_confirmation") as HTMLInputElement
-    ).value;
 
     try {
       const res = await resetPassword(token, password, passwordConfirmation);
@@ -42,43 +39,47 @@ export default function ResetPasswordPage({
   }
 
   return (
-    <div className="max-w-sm mx-auto mt-12">
-      <h1 className="text-2xl font-bold mb-4">Update your password</h1>
+    <div className="form-narrow" style={{ marginTop: "var(--charcoal-space-60)" }}>
+      <div style={{ marginBottom: "var(--charcoal-space-40)" }}>
+        <PageHeading>Update your password</PageHeading>
+      </div>
 
-      {error && <p className="text-red-600 mb-4">{error}</p>}
+      {error && (
+        <div style={{ marginBottom: "var(--charcoal-space-30)" }}>
+          <AlertMessage variant="error">{error}</AlertMessage>
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3.5">
-          <input
-            type="password"
-            name="password"
-            required
-            autoComplete="new-password"
-            placeholder="Enter new password"
-            maxLength={72}
-            className="w-full px-2.5 py-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-        <div className="mb-3.5">
-          <input
-            type="password"
-            name="password_confirmation"
-            required
-            autoComplete="new-password"
-            placeholder="Repeat new password"
-            maxLength={72}
-            className="w-full px-2.5 py-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-        <div className="mb-3.5">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full px-3 py-2 rounded-lg text-white bg-gray-900 border border-gray-900 text-sm cursor-pointer disabled:opacity-50"
-          >
-            {submitting ? "Saving..." : "Save"}
-          </button>
-        </div>
+      <form onSubmit={handleSubmit} className="stack-l">
+        <TextField
+          label="New password"
+          showLabel
+          type="password"
+          name="password"
+          required
+          autoComplete="new-password"
+          placeholder="Enter new password"
+          maxLength={72}
+          value={password}
+          onChange={setPassword}
+        />
+
+        <TextField
+          label="Confirm password"
+          showLabel
+          type="password"
+          name="password_confirmation"
+          required
+          autoComplete="new-password"
+          placeholder="Repeat new password"
+          maxLength={72}
+          value={passwordConfirmation}
+          onChange={setPasswordConfirmation}
+        />
+
+        <Button type="submit" variant="Primary" fullWidth disabled={submitting}>
+          {submitting ? "Saving..." : "Save"}
+        </Button>
       </form>
     </div>
   );

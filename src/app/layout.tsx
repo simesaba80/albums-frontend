@@ -1,22 +1,18 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { Providers } from "./providers";
+import { LinkButton } from "@/components/LinkButton";
+import "@charcoal-ui/react/dist/index.css";
+import "@charcoal-ui/theme/unstable-css/_variables_light.css";
+import "@charcoal-ui/theme/unstable-css/_variables_dark.css";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Shared Album",
   description: "Shared Album Application",
 };
+
+const themeInitScript = `(function(){try{var s=localStorage.getItem('charcoal-theme');var t=s||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='light';}})();`;
 
 export default function RootLayout({
   children,
@@ -24,25 +20,33 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ja"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-    >
-      <body className="min-h-screen">
-        <header className="border-b border-gray-200 px-6 py-4">
-          <nav className="flex items-center justify-between max-w-5xl mx-auto">
-            <Link href="/" className="text-lg font-bold text-gray-900">
-              Shared Album
-            </Link>
-            <Link
-              href="/login"
-              className="text-sm text-gray-600 hover:text-gray-900"
-            >
-              Login
-            </Link>
-          </nav>
-        </header>
-        <main className="max-w-5xl mx-auto px-6 py-6">{children}</main>
+    <html lang="ja" suppressHydrationWarning>
+      <head>
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: Required to set theme before first paint to avoid FOUC
+          dangerouslySetInnerHTML={{ __html: themeInitScript }}
+        />
+      </head>
+      <body className="app-shell">
+        <Providers>
+          <header className="app-header">
+            <nav className="page-container app-header-nav">
+              <Link
+                href="/"
+                style={{
+                  fontSize: "var(--charcoal-text-font-size-heading-xxs)",
+                  fontWeight: "var(--charcoal-text-font-weight-bold)",
+                }}
+              >
+                Shared Album
+              </Link>
+              <LinkButton href="/login" variant="Navigation" size="S">
+                Login
+              </LinkButton>
+            </nav>
+          </header>
+          <main className="page-container app-main">{children}</main>
+        </Providers>
       </body>
     </html>
   );

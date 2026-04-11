@@ -26,6 +26,42 @@ export async function createAlbum(formData: FormData): Promise<Album> {
   return res.json();
 }
 
+export async function updateAlbum(
+  id: number | string,
+  formData: FormData,
+): Promise<Album> {
+  const res = await fetch(`${API_URL}/albums/${id}`, {
+    method: "PATCH",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const body = await res.json();
+    throw new Error(JSON.stringify(body.errors ?? body));
+  }
+
+  return res.json();
+}
+
+export async function deleteAlbum(id: number | string): Promise<void> {
+  const res = await fetch(`${API_URL}/albums/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    let message = "Failed to delete album";
+
+    try {
+      const body = await res.json();
+      message = JSON.stringify(body.errors ?? body);
+    } catch {
+      // Keep default message when the response body is not JSON.
+    }
+
+    throw new Error(message);
+  }
+}
+
 export async function login(
   emailAddress: string,
   password: string,
@@ -56,6 +92,9 @@ export async function resetPassword(
   return fetch(`${API_URL}/passwords/${token}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password, password_confirmation: passwordConfirmation }),
+    body: JSON.stringify({
+      password,
+      password_confirmation: passwordConfirmation,
+    }),
   });
 }

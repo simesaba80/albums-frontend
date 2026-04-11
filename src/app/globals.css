@@ -1,19 +1,341 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #111827;
-}
+@config "../../tailwind.config.ts";
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ── Base ── */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: var(--charcoal-color-background-default);
+  color: var(--charcoal-color-text-default);
+  font-family: var(--charcoal-text-font-family-sans), -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: var(--charcoal-text-font-size-body);
+  line-height: var(--charcoal-text-line-height-body);
+}
+
+.app-shell {
+  min-height: 100vh;
+  background-color: var(--charcoal-color-background-secondary);
+}
+
+.app-header {
+  border-bottom: 1px solid var(--charcoal-color-border-default);
+  padding: var(--charcoal-space-30) var(--charcoal-space-40);
+  background-color: var(--charcoal-color-container-default);
+}
+
+.app-header-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 0;
+}
+
+.app-main {
+  padding-block: var(--charcoal-space-40);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Base surfaces — push towards near-black with subtle depth */
+  --charcoal-color-background-default: #0b0b10;
+  --charcoal-color-background-secondary: #06060a;
+  --charcoal-color-background-tertiary: #030306;
+  --charcoal-color-background-overlay: rgba(0, 0, 0, 0.72);
+
+  /* Container layers — elevated surfaces get a touch of lift */
+  --charcoal-color-container-default: #12121a;
+  --charcoal-color-container-secondary-default: #181824;
+  --charcoal-color-container-secondary-hover: #22222f;
+  --charcoal-color-container-secondary-press: #2b2b3a;
+  --charcoal-color-container-tertiary-default: #1d1d28;
+  --charcoal-color-container-tertiary-hover: #262633;
+
+  /* Borders — bright enough to feel defined on dark surfaces */
+  --charcoal-color-border-default: rgba(255, 255, 255, 0.1);
+  --charcoal-color-border-hover: rgba(255, 255, 255, 0.22);
+
+  /* Text — high contrast, clearly tiered */
+  --charcoal-color-text-default: #f4f4f9;
+  --charcoal-color-text-secondary-default: #b4b4c4;
+  --charcoal-color-text-tertiary-default: #7a7a8c;
+
+  /* Alert containers — subdued but unmistakable */
+  --charcoal-color-container-negative-default: rgba(248, 113, 113, 0.14);
+  --charcoal-color-container-positive-default: rgba(74, 222, 128, 0.14);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── Typography ── */
+
+.heading-l {
+  font-size: var(--charcoal-text-font-size-heading-s);
+  line-height: var(--charcoal-text-line-height-heading-s);
+  font-weight: var(--charcoal-text-font-weight-bold);
+  color: var(--charcoal-color-text-default);
+}
+
+.heading-m {
+  font-size: var(--charcoal-text-font-size-heading-xs);
+  line-height: var(--charcoal-text-line-height-heading-xs);
+  font-weight: var(--charcoal-text-font-weight-bold);
+  color: var(--charcoal-color-text-default);
+}
+
+.text-secondary {
+  color: var(--charcoal-color-text-secondary-default);
+}
+
+.text-tertiary {
+  color: var(--charcoal-color-text-tertiary-default);
+}
+
+.caption {
+  font-size: var(--charcoal-text-font-size-caption-m);
+  line-height: var(--charcoal-text-line-height-caption-m);
+}
+
+.caption-s {
+  font-size: var(--charcoal-text-font-size-caption-s);
+  line-height: var(--charcoal-text-line-height-caption-s);
+}
+
+/* ── Surfaces ── */
+
+.surface-card {
+  background-color: var(--charcoal-color-container-secondary-default);
+  border: 1px solid var(--charcoal-color-border-default);
+  border-radius: var(--charcoal-radius-l);
+  overflow: hidden;
+}
+
+.surface-card:hover {
+  border-color: var(--charcoal-color-border-hover);
+}
+
+.album-card {
+  position: relative;
+  overflow: visible;
+}
+
+.album-card.is-menu-open {
+  z-index: 20;
+}
+
+.album-card-media {
+  overflow: hidden;
+  border-radius: var(--charcoal-radius-l) var(--charcoal-radius-l) 0 0;
+}
+
+.album-card-link {
+  display: block;
+}
+
+.album-card-content {
+  position: relative;
+}
+
+.album-card-title-link {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+.album-card-description {
+  line-clamp: 2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.album-card-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.album-card-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--charcoal-color-border-default);
+  background-color: var(--charcoal-color-container-default);
+  color: var(--charcoal-color-text-secondary-default);
+  border-radius: var(--charcoal-radius-full);
+  width: 28px;
+  height: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.album-card-menu-trigger:hover {
+  border-color: var(--charcoal-color-border-hover);
+  color: var(--charcoal-color-text-default);
+}
+
+.album-card-menu-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--charcoal-space-10));
+  z-index: 40;
+  min-width: 136px;
+  border: 1px solid var(--charcoal-color-border-default);
+  border-radius: var(--charcoal-radius-s);
+  background: var(--charcoal-color-container-default);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  padding: var(--charcoal-space-10);
+  display: grid;
+  gap: var(--charcoal-space-5);
+}
+
+.album-card-menu-item {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--charcoal-color-text-default);
+  padding: var(--charcoal-space-10) var(--charcoal-space-15);
+  border-radius: var(--charcoal-radius-xs);
+  cursor: pointer;
+}
+
+.album-card-menu-item:hover {
+  background: var(--charcoal-color-container-secondary-hover);
+}
+
+.album-card-menu-item-danger {
+  color: #ef8080;
+}
+
+.surface-secondary {
+  background-color: var(--charcoal-color-container-secondary-default);
+}
+
+/* ── Dividers ── */
+
+.border-charcoal {
+  border-color: var(--charcoal-color-border-default);
+}
+
+/* ── Field labels (for non-charcoal inputs like file) ── */
+
+.field-label {
+  display: block;
+  font-size: var(--charcoal-text-font-size-caption-m);
+  font-weight: var(--charcoal-text-font-weight-bold);
+  line-height: var(--charcoal-text-line-height-caption-m);
+  color: var(--charcoal-color-text-default);
+  margin-bottom: var(--charcoal-space-20);
+}
+
+.file-control {
+  display: block;
+  width: 100%;
+  padding: var(--charcoal-space-20) var(--charcoal-space-25);
+  border: 1px dashed var(--charcoal-color-border-default);
+  border-radius: var(--charcoal-radius-s);
+  background-color: var(--charcoal-color-container-tertiary-default);
+  color: var(--charcoal-color-text-secondary-default);
+}
+
+.file-control:hover {
+  border-color: var(--charcoal-color-border-hover);
+}
+
+/* ── Layout helpers ── */
+
+.page-container {
+  max-width: 960px;
+  margin-inline: auto;
+  padding-inline: var(--charcoal-space-40);
+}
+
+.form-narrow {
+  max-width: 400px;
+  margin-inline: auto;
+}
+
+.form-wide {
+  max-width: 560px;
+}
+
+.stack-l {
+  display: grid;
+  gap: var(--charcoal-space-40);
+}
+
+.stack-m {
+  display: grid;
+  gap: var(--charcoal-space-30);
+}
+
+/* ── New album page ── */
+
+.new-album-header {
+  margin-bottom: var(--charcoal-space-40);
+}
+
+.new-album-alert {
+  margin-bottom: var(--charcoal-space-30);
+}
+
+.new-album-form {
+  padding: var(--charcoal-space-40);
+}
+
+.new-album-form:hover {
+  border-color: var(--charcoal-color-border-default);
+}
+
+.new-album-photo-row {
+  display: flex;
+  align-items: center;
+  gap: var(--charcoal-space-20);
+}
+
+.new-album-photo-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.new-album-photo-empty {
+  margin: 0;
+}
+
+.new-album-actions {
+  display: flex;
+  gap: var(--charcoal-space-20);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .page-container {
+    padding-inline: var(--charcoal-space-30);
+  }
+
+  .app-header {
+    padding: var(--charcoal-space-25) var(--charcoal-space-30);
+  }
+
+  .new-album-form {
+    padding: var(--charcoal-space-30);
+  }
+
+  .new-album-photo-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
