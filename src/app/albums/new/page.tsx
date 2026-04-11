@@ -61,17 +61,17 @@ export default function NewAlbumPage() {
 
   return (
     <>
-      <div style={{ marginBottom: "var(--charcoal-space-40)" }}>
+      <div className="new-album-header">
         <PageHeading>New Album</PageHeading>
       </div>
 
       {error && (
-        <div style={{ marginBottom: "var(--charcoal-space-30)" }}>
+        <div className="new-album-alert">
           <AlertMessage variant="error">{error}</AlertMessage>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="form-wide stack-l">
+      <form onSubmit={handleSubmit} className="form-wide stack-l surface-card new-album-form">
         <TextField
           label="Title"
           showLabel
@@ -91,41 +91,33 @@ export default function NewAlbumPage() {
         <div>
           <label className="field-label">Photos</label>
           <div className="stack-m">
-            {photoFiles.map((file, index) => (
-              <div
-                key={`${file.name}-${index}`}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--charcoal-space-20)",
-                }}
-              >
-                <span
-                  className="caption text-secondary"
-                  style={{
-                    flex: 1,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {file.name}
-                </span>
-                <Button
-                  variant="Danger"
-                  size="S"
-                  type="button"
-                  onClick={() => removePhotoFile(index)}
-                >
-                  Remove
-                </Button>
+            {photoFiles.length > 0 ? (
+              <div className="stack-m">
+                {photoFiles.map((file, index) => (
+                  <div key={`${file.name}-${index}`} className="new-album-photo-row">
+                    <span className="caption text-secondary new-album-photo-name">
+                      {file.name}
+                    </span>
+                    <Button
+                      variant="Danger"
+                      size="S"
+                      type="button"
+                      onClick={() => removePhotoFile(index)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <p className="caption text-tertiary new-album-photo-empty">
+                No photos added yet.
+              </p>
+            )}
             <input
               type="file"
               accept="image/*"
-              className="caption"
-              style={{ display: "block", width: "100%" }}
+              className="caption file-control"
               onChange={(e) => {
                 addPhotoFile(e.target.files?.[0] ?? null);
                 e.target.value = "";
@@ -156,7 +148,7 @@ export default function NewAlbumPage() {
           <MenuItem value="private_album">Private album</MenuItem>
         </DropdownSelector>
 
-        <div style={{ display: "flex", gap: "var(--charcoal-space-20)" }}>
+        <div className="new-album-actions">
           <Button type="submit" variant="Primary" disabled={submitting}>
             {submitting ? "Creating..." : "Create Album"}
           </Button>

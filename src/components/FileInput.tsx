@@ -17,8 +17,7 @@ export function FileInput({ id, label, accept, onChange }: FileInputProps) {
         type="file"
         id={id}
         accept={accept}
-        className="caption"
-        style={{ display: "block", width: "100%" }}
+        className="caption file-control"
         onChange={(e) => onChange(e.target.files?.[0] ?? null)}
       />
     </div>
