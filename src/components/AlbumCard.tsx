@@ -126,6 +126,14 @@ export function AlbumCard({ album }: { album: Album }) {
             {menuOpen && (
               <div className="album-card-menu-popover" role="menu">
                 <Link
+                  href={`/albums/${album.id}/edit`}
+                  className="album-card-menu-item"
+                  role="menuitem"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Update
+                </Link>
+                <Link
                   href={`/albums/${album.id}`}
                   className="album-card-menu-item"
                   role="menuitem"
