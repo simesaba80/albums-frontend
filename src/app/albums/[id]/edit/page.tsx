@@ -7,6 +7,7 @@ import {
   TextArea,
   TextField,
 } from "@charcoal-ui/react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AlertMessage } from "@/components/AlertMessage";
@@ -43,7 +44,9 @@ export default function AlbumEditPage() {
   const [status, setStatus] = useState("draft");
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [currentCoverUrl, setCurrentCoverUrl] = useState<string | null>(null);
-  const [existingPhotos, setExistingPhotos] = useState<ExistingPhotoDraft[]>([]);
+  const [existingPhotos, setExistingPhotos] = useState<ExistingPhotoDraft[]>(
+    [],
+  );
   const [newPhotos, setNewPhotos] = useState<NewPhotoDraft[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -96,7 +99,9 @@ export default function AlbumEditPage() {
     patch: Partial<Omit<ExistingPhotoDraft, "id">>,
   ) {
     setExistingPhotos((prev) =>
-      prev.map((photo) => (photo.id === photoId ? { ...photo, ...patch } : photo)),
+      prev.map((photo) =>
+        photo.id === photoId ? { ...photo, ...patch } : photo,
+      ),
     );
   }
 
@@ -112,9 +117,14 @@ export default function AlbumEditPage() {
     ]);
   }
 
-  function updateNewPhoto(tempId: string, patch: Partial<Omit<NewPhotoDraft, "tempId">>) {
+  function updateNewPhoto(
+    tempId: string,
+    patch: Partial<Omit<NewPhotoDraft, "tempId">>,
+  ) {
     setNewPhotos((prev) =>
-      prev.map((photo) => (photo.tempId === tempId ? { ...photo, ...patch } : photo)),
+      prev.map((photo) =>
+        photo.tempId === tempId ? { ...photo, ...patch } : photo,
+      ),
     );
   }
 
@@ -135,36 +145,32 @@ export default function AlbumEditPage() {
       formData.append("album[cover_image]", coverImage);
     }
 
-    const photosToDelete = existingPhotos.filter((photo) => photo.markedForDeletion);
-    photosToDelete.forEach((photo) => {
-      formData.append("photo_changes[delete_ids][]", String(photo.id));
-    });
+    let photoAttributeIndex = 0;
 
-    const photosToUpdate = existingPhotos.filter((photo) => !photo.markedForDeletion);
-    photosToUpdate.forEach((photo, index) => {
-      formData.append(`photo_changes[update][${index}][id]`, String(photo.id));
-      formData.append(`photo_changes[update][${index}][caption]`, photo.caption);
-      formData.append(
-        `photo_changes[update][${index}][display_order]`,
-        photo.displayOrder,
-      );
-      if (photo.replacementImage) {
-        formData.append(
-          `photo_changes[update][${index}][image]`,
-          photo.replacementImage,
-        );
+    existingPhotos.forEach((photo) => {
+      const baseKey = `album[photos_attributes][${photoAttributeIndex}]`;
+      formData.append(`${baseKey}[id]`, String(photo.id));
+
+      if (photo.markedForDeletion) {
+        formData.append(`${baseKey}[_destroy]`, "1");
+      } else {
+        formData.append(`${baseKey}[caption]`, photo.caption);
+        formData.append(`${baseKey}[display_order]`, photo.displayOrder);
+        if (photo.replacementImage) {
+          formData.append(`${baseKey}[image]`, photo.replacementImage);
+        }
       }
+
+      photoAttributeIndex += 1;
     });
 
-    const photosToAdd = newPhotos.filter((photo) => photo.image);
-    photosToAdd.forEach((photo, index) => {
+    newPhotos.forEach((photo) => {
       if (!photo.image) return;
-      formData.append(`photo_changes[add][${index}][image]`, photo.image);
-      formData.append(`photo_changes[add][${index}][caption]`, photo.caption);
-      formData.append(
-        `photo_changes[add][${index}][display_order]`,
-        photo.displayOrder,
-      );
+      const baseKey = `album[photos_attributes][${photoAttributeIndex}]`;
+      formData.append(`${baseKey}[image]`, photo.image);
+      formData.append(`${baseKey}[caption]`, photo.caption);
+      formData.append(`${baseKey}[display_order]`, photo.displayOrder);
+      photoAttributeIndex += 1;
     });
 
     try {
@@ -193,7 +199,10 @@ export default function AlbumEditPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="form-wide stack-l surface-card new-album-form">
+      <form
+        onSubmit={handleSubmit}
+        className="form-wide stack-l surface-card new-album-form"
+      >
         <TextField
           label="Title"
           showLabel
@@ -205,12 +214,16 @@ export default function AlbumEditPage() {
 
         <div className="stack-m">
           {currentCoverUrl && !coverImage && (
-            <img
+            <Image
               src={currentCoverUrl}
               alt="Current cover"
+              width={280}
+              height={280}
+              unoptimized
               style={{
                 width: "100%",
                 maxWidth: 280,
+                height: "auto",
                 borderRadius: "var(--charcoal-radius-s)",
                 border: "1px solid var(--charcoal-color-border-default)",
               }}
@@ -225,7 +238,7 @@ export default function AlbumEditPage() {
         </div>
 
         <div className="stack-m">
-          <label className="field-label">Photos (bulk edit)</label>
+          <span className="field-label">Photos (bulk edit)</span>
           {existingPhotos.length > 0 ? (
             <div className="stack-m">
               {existingPhotos.map((photo) => (
@@ -247,15 +260,19 @@ export default function AlbumEditPage() {
                       }}
                     >
                       {photo.imageUrl ? (
-                        <img
+                        <Image
                           src={photo.imageUrl}
-                          alt={`Photo ${photo.id}`}
+                          alt={String(photo.id)}
+                          width={96}
+                          height={96}
+                          unoptimized
                           style={{
                             width: 96,
                             height: 96,
                             objectFit: "cover",
                             borderRadius: "var(--charcoal-radius-s)",
-                            border: "1px solid var(--charcoal-color-border-default)",
+                            border:
+                              "1px solid var(--charcoal-color-border-default)",
                           }}
                         />
                       ) : (
@@ -267,13 +284,17 @@ export default function AlbumEditPage() {
                             borderRadius: "var(--charcoal-radius-s)",
                             display: "grid",
                             placeItems: "center",
-                            border: "1px solid var(--charcoal-color-border-default)",
+                            border:
+                              "1px solid var(--charcoal-color-border-default)",
                           }}
                         >
                           No image
                         </div>
                       )}
-                      <div style={{ minWidth: 220, flex: 1 }} className="stack-m">
+                      <div
+                        style={{ minWidth: 220, flex: 1 }}
+                        className="stack-m"
+                      >
                         <TextField
                           label="Caption"
                           showLabel
@@ -288,7 +309,9 @@ export default function AlbumEditPage() {
                           showLabel
                           value={photo.displayOrder}
                           onChange={(value) =>
-                            updateExistingPhoto(photo.id, { displayOrder: value })
+                            updateExistingPhoto(photo.id, {
+                              displayOrder: value,
+                            })
                           }
                           disabled={photo.markedForDeletion}
                         />
@@ -307,7 +330,10 @@ export default function AlbumEditPage() {
                       }
                     />
                     {photo.replacementImage && (
-                      <p className="caption text-secondary" style={{ margin: 0 }}>
+                      <p
+                        className="caption text-secondary"
+                        style={{ margin: 0 }}
+                      >
                         Replacement: {photo.replacementImage.name}
                       </p>
                     )}
@@ -323,7 +349,9 @@ export default function AlbumEditPage() {
                           })
                         }
                       >
-                        {photo.markedForDeletion ? "Undo delete" : "Mark for delete"}
+                        {photo.markedForDeletion
+                          ? "Undo delete"
+                          : "Mark for delete"}
                       </Button>
                     </div>
                   </div>
@@ -347,10 +375,15 @@ export default function AlbumEditPage() {
               flexWrap: "wrap",
             }}
           >
-            <label className="field-label" style={{ marginBottom: 0 }}>
+            <span className="field-label" style={{ marginBottom: 0 }}>
               Add photos
-            </label>
-            <Button type="button" variant="Default" size="S" onClick={addNewPhotoRow}>
+            </span>
+            <Button
+              type="button"
+              variant="Default"
+              size="S"
+              onClick={addNewPhotoRow}
+            >
               Add row
             </Button>
           </div>
@@ -375,7 +408,10 @@ export default function AlbumEditPage() {
                       }
                     />
                     {photo.image && (
-                      <p className="caption text-secondary" style={{ margin: 0 }}>
+                      <p
+                        className="caption text-secondary"
+                        style={{ margin: 0 }}
+                      >
                         Selected: {photo.image.name}
                       </p>
                     )}
