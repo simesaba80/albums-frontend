@@ -122,13 +122,15 @@ export default function AlbumEditPage() {
     );
   }
 
-  function addNewPhotoRow() {
+  function addNewPhotoFile(file: File | null) {
+    if (!file) return;
+
     setPhotos((prev) => [
       ...prev,
       {
         kind: "new" as const,
-        tempId: `${Date.now()}-${prev.length}`,
-        image: null,
+        tempId: `${file.name}-${file.lastModified}-${file.size}-${Date.now()}-${prev.length}`,
+        image: file,
         caption: "",
       },
     ]);
@@ -288,27 +290,9 @@ export default function AlbumEditPage() {
         </div>
 
         <div className="stack-m">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "var(--charcoal-space-20)",
-              flexWrap: "wrap",
-            }}
-          >
-            <span className="field-label" style={{ marginBottom: 0 }}>
-              Photos
-            </span>
-            <Button
-              type="button"
-              variant="Default"
-              size="S"
-              onClick={addNewPhotoRow}
-            >
-              Add row
-            </Button>
-          </div>
+          <span className="field-label" style={{ marginBottom: 0 }}>
+            Photos
+          </span>
 
           {photos.length > 0 ? (
             <div className="stack-m">
@@ -518,6 +502,16 @@ export default function AlbumEditPage() {
               No photos queued.
             </p>
           )}
+
+          <input
+            type="file"
+            accept="image/*"
+            className="caption file-control"
+            onChange={(event) => {
+              addNewPhotoFile(event.target.files?.[0] ?? null);
+              event.target.value = "";
+            }}
+          />
         </div>
 
         <TextArea
