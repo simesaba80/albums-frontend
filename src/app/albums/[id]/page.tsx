@@ -12,6 +12,13 @@ export default async function AlbumShowPage({
 }) {
   const { id } = await params;
   const album = await fetchAlbum(id);
+  const photos = [...(album.photos ?? [])].sort((a, b) => {
+    const orderDiff =
+      (a.display_order ?? Number.MAX_SAFE_INTEGER) -
+      (b.display_order ?? Number.MAX_SAFE_INTEGER);
+    if (orderDiff !== 0) return orderDiff;
+    return a.id - b.id;
+  });
 
   return (
     <>
@@ -29,7 +36,7 @@ export default async function AlbumShowPage({
         <AlbumActions albumId={id} />
       </div>
 
-      {album.photos && album.photos.length > 0 ? (
+      {photos.length > 0 ? (
         <div
           style={{
             display: "flex",
@@ -37,7 +44,7 @@ export default async function AlbumShowPage({
             gap: "var(--charcoal-space-25)",
           }}
         >
-          {album.photos.map((photo) => (
+          {photos.map((photo) => (
             <PhotoCard key={photo.id} photo={photo} />
           ))}
         </div>
