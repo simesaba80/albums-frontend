@@ -82,13 +82,23 @@ export default function NewAlbumPage() {
     if (coverImage) {
       formData.append("album[cover_image]", coverImage);
     }
+    // Previous backend format:
+    // photoFiles.forEach(({ file, caption }, index) => {
+    //   formData.append(`album[photos_attributes][${index}][image]`, file);
+    //   formData.append(`album[photos_attributes][${index}][caption]`, caption);
+    //   formData.append(
+    //     `album[photos_attributes][${index}][display_order]`,
+    //     String(index),
+    //   );
+    // });
     photoFiles.forEach(({ file, caption }, index) => {
-      formData.append(`album[photos_attributes][${index}][image]`, file);
-      formData.append(`album[photos_attributes][${index}][caption]`, caption);
-      formData.append(
-        `album[photos_attributes][${index}][display_order]`,
-        String(index),
-      );
+      // Previous payload format before the latest backend change:
+      // formData.append(`photos[create][${index}][image]`, file);
+      // formData.append(`photos[create][${index}][caption]`, caption);
+      // formData.append(`photos[create][${index}][display_order]`, String(index));
+      formData.append("photos[create][][image]", file);
+      formData.append("photos[create][][caption]", caption);
+      formData.append("photos[create][][display_order]", String(index));
     });
 
     try {
