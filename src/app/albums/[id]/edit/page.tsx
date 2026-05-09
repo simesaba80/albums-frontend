@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  IconArrowCcw,
+  IconArrowDown,
+  IconArrowUp,
+  IconDelete,
+} from "@charcoal-ui/icons/react/v2";
+import {
   Button,
   DropdownSelector,
   MenuItem,
@@ -18,20 +24,30 @@ import { fetchAlbum, updateAlbum } from "@/lib/api";
 import type { Photo } from "@/lib/types";
 
 type ExistingPhotoDraft = {
+  kind: "existing";
   id: number;
   imageUrl: string | null;
   caption: string;
-  displayOrder: string;
   replacementImage: File | null;
   markedForDeletion: boolean;
 };
 
 type NewPhotoDraft = {
+  kind: "new";
   tempId: string;
   image: File | null;
   caption: string;
-  displayOrder: string;
 };
+
+type PhotoDraft = ExistingPhotoDraft | NewPhotoDraft;
+
+function isOrderablePhoto(photo: PhotoDraft) {
+  return photo.kind === "existing" ? !photo.markedForDeletion : !!photo.image;
+}
+
+function getPhotoDisplayOrder(photo: Photo) {
+  return photo.display_order ?? Number.MAX_SAFE_INTEGER;
+}
 
 export default function AlbumEditPage() {
   const router = useRouter();
@@ -44,10 +60,7 @@ export default function AlbumEditPage() {
   const [status, setStatus] = useState("draft");
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [currentCoverUrl, setCurrentCoverUrl] = useState<string | null>(null);
-  const [existingPhotos, setExistingPhotos] = useState<ExistingPhotoDraft[]>(
-    [],
-  );
-  const [newPhotos, setNewPhotos] = useState<NewPhotoDraft[]>([]);
+  const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -62,24 +75,26 @@ export default function AlbumEditPage() {
         const album = await fetchAlbum(albumId);
         if (!active) return;
 
+        const orderedPhotos = [...(album.photos ?? [])].sort((a, b) => {
+          const orderDiff = getPhotoDisplayOrder(a) - getPhotoDisplayOrder(b);
+          if (orderDiff !== 0) return orderDiff;
+          return a.id - b.id;
+        });
+
         setTitle(album.title ?? "");
         setDescription(album.description ?? "");
         setStatus(album.status);
         setCurrentCoverUrl(album.cover_image_url);
-        setExistingPhotos(
-          (album.photos ?? []).map((photo: Photo) => ({
+        setPhotos(
+          orderedPhotos.map((photo) => ({
+            kind: "existing" as const,
             id: photo.id,
             imageUrl: photo.image_url,
             caption: photo.caption ?? "",
-            displayOrder:
-              photo.display_order !== null && photo.display_order !== undefined
-                ? String(photo.display_order)
-                : "",
             replacementImage: null,
             markedForDeletion: false,
           })),
         );
-        setNewPhotos([]);
       } catch {
         if (!active) return;
         setError("Failed to load album");
@@ -96,40 +111,70 @@ export default function AlbumEditPage() {
 
   function updateExistingPhoto(
     photoId: number,
-    patch: Partial<Omit<ExistingPhotoDraft, "id">>,
+    patch: Partial<Omit<ExistingPhotoDraft, "id" | "kind">>,
   ) {
-    setExistingPhotos((prev) =>
+    setPhotos((prev) =>
       prev.map((photo) =>
-        photo.id === photoId ? { ...photo, ...patch } : photo,
+        photo.kind === "existing" && photo.id === photoId
+          ? { ...photo, ...patch }
+          : photo,
       ),
     );
   }
 
   function addNewPhotoRow() {
-    setNewPhotos((prev) => [
+    setPhotos((prev) => [
       ...prev,
       {
+        kind: "new" as const,
         tempId: `${Date.now()}-${prev.length}`,
         image: null,
         caption: "",
-        displayOrder: "",
       },
     ]);
   }
 
   function updateNewPhoto(
     tempId: string,
-    patch: Partial<Omit<NewPhotoDraft, "tempId">>,
+    patch: Partial<Omit<NewPhotoDraft, "tempId" | "kind">>,
   ) {
-    setNewPhotos((prev) =>
+    setPhotos((prev) =>
       prev.map((photo) =>
-        photo.tempId === tempId ? { ...photo, ...patch } : photo,
+        photo.kind === "new" && photo.tempId === tempId
+          ? { ...photo, ...patch }
+          : photo,
       ),
     );
   }
 
   function removeNewPhoto(tempId: string) {
-    setNewPhotos((prev) => prev.filter((photo) => photo.tempId !== tempId));
+    setPhotos((prev) =>
+      prev.filter((photo) => photo.kind !== "new" || photo.tempId !== tempId),
+    );
+  }
+
+  function movePhoto(index: number, direction: -1 | 1) {
+    setPhotos((prev) => {
+      const nextIndex = index + direction;
+      if (nextIndex < 0 || nextIndex >= prev.length) return prev;
+
+      const next = [...prev];
+      [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+      return next;
+    });
+  }
+
+  function getPhotoPosition(index: number) {
+    const photo = photos[index];
+    if (!photo || !isOrderablePhoto(photo)) return null;
+
+    let position = 0;
+    for (let i = 0; i <= index; i += 1) {
+      if (isOrderablePhoto(photos[i])) {
+        position += 1;
+      }
+    }
+    return position;
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -146,31 +191,36 @@ export default function AlbumEditPage() {
     }
 
     let photoAttributeIndex = 0;
+    let displayOrder = 0;
 
-    existingPhotos.forEach((photo) => {
+    photos.forEach((photo) => {
       const baseKey = `album[photos_attributes][${photoAttributeIndex}]`;
-      formData.append(`${baseKey}[id]`, String(photo.id));
 
-      if (photo.markedForDeletion) {
-        formData.append(`${baseKey}[_destroy]`, "1");
-      } else {
-        formData.append(`${baseKey}[caption]`, photo.caption);
-        formData.append(`${baseKey}[display_order]`, photo.displayOrder);
-        if (photo.replacementImage) {
-          formData.append(`${baseKey}[image]`, photo.replacementImage);
+      if (photo.kind === "existing") {
+        formData.append(`${baseKey}[id]`, String(photo.id));
+
+        if (photo.markedForDeletion) {
+          formData.append(`${baseKey}[_destroy]`, "1");
+        } else {
+          formData.append(`${baseKey}[caption]`, photo.caption);
+          formData.append(`${baseKey}[display_order]`, String(displayOrder));
+          if (photo.replacementImage) {
+            formData.append(`${baseKey}[image]`, photo.replacementImage);
+          }
+          displayOrder += 1;
         }
+
+        photoAttributeIndex += 1;
+        return;
       }
 
-      photoAttributeIndex += 1;
-    });
-
-    newPhotos.forEach((photo) => {
       if (!photo.image) return;
-      const baseKey = `album[photos_attributes][${photoAttributeIndex}]`;
+
       formData.append(`${baseKey}[image]`, photo.image);
       formData.append(`${baseKey}[caption]`, photo.caption);
-      formData.append(`${baseKey}[display_order]`, photo.displayOrder);
+      formData.append(`${baseKey}[display_order]`, String(displayOrder));
       photoAttributeIndex += 1;
+      displayOrder += 1;
     });
 
     try {
@@ -238,134 +288,6 @@ export default function AlbumEditPage() {
         </div>
 
         <div className="stack-m">
-          <span className="field-label">Photos (bulk edit)</span>
-          {existingPhotos.length > 0 ? (
-            <div className="stack-m">
-              {existingPhotos.map((photo) => (
-                <div
-                  key={photo.id}
-                  className="surface-card"
-                  style={{
-                    padding: "var(--charcoal-space-25)",
-                    opacity: photo.markedForDeletion ? 0.6 : 1,
-                  }}
-                >
-                  <div className="stack-m">
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "var(--charcoal-space-20)",
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      {photo.imageUrl ? (
-                        <Image
-                          src={photo.imageUrl}
-                          alt={String(photo.id)}
-                          width={96}
-                          height={96}
-                          unoptimized
-                          style={{
-                            width: 96,
-                            height: 96,
-                            objectFit: "cover",
-                            borderRadius: "var(--charcoal-radius-s)",
-                            border:
-                              "1px solid var(--charcoal-color-border-default)",
-                          }}
-                        />
-                      ) : (
-                        <div
-                          className="surface-secondary text-tertiary caption"
-                          style={{
-                            width: 96,
-                            height: 96,
-                            borderRadius: "var(--charcoal-radius-s)",
-                            display: "grid",
-                            placeItems: "center",
-                            border:
-                              "1px solid var(--charcoal-color-border-default)",
-                          }}
-                        >
-                          No image
-                        </div>
-                      )}
-                      <div
-                        style={{ minWidth: 220, flex: 1 }}
-                        className="stack-m"
-                      >
-                        <TextField
-                          label="Caption"
-                          showLabel
-                          value={photo.caption}
-                          onChange={(value) =>
-                            updateExistingPhoto(photo.id, { caption: value })
-                          }
-                          disabled={photo.markedForDeletion}
-                        />
-                        <TextField
-                          label="Display order"
-                          showLabel
-                          value={photo.displayOrder}
-                          onChange={(value) =>
-                            updateExistingPhoto(photo.id, {
-                              displayOrder: value,
-                            })
-                          }
-                          disabled={photo.markedForDeletion}
-                        />
-                      </div>
-                    </div>
-
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="caption file-control"
-                      disabled={photo.markedForDeletion}
-                      onChange={(event) =>
-                        updateExistingPhoto(photo.id, {
-                          replacementImage: event.target.files?.[0] ?? null,
-                        })
-                      }
-                    />
-                    {photo.replacementImage && (
-                      <p
-                        className="caption text-secondary"
-                        style={{ margin: 0 }}
-                      >
-                        Replacement: {photo.replacementImage.name}
-                      </p>
-                    )}
-
-                    <div>
-                      <Button
-                        type="button"
-                        variant={photo.markedForDeletion ? "Default" : "Danger"}
-                        size="S"
-                        onClick={() =>
-                          updateExistingPhoto(photo.id, {
-                            markedForDeletion: !photo.markedForDeletion,
-                          })
-                        }
-                      >
-                        {photo.markedForDeletion
-                          ? "Undo delete"
-                          : "Mark for delete"}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="caption text-tertiary new-album-photo-empty">
-              No existing photos.
-            </p>
-          )}
-        </div>
-
-        <div className="stack-m">
           <div
             style={{
               display: "flex",
@@ -376,7 +298,7 @@ export default function AlbumEditPage() {
             }}
           >
             <span className="field-label" style={{ marginBottom: 0 }}>
-              Add photos
+              Photos
             </span>
             <Button
               type="button"
@@ -388,66 +310,212 @@ export default function AlbumEditPage() {
             </Button>
           </div>
 
-          {newPhotos.length > 0 ? (
+          {photos.length > 0 ? (
             <div className="stack-m">
-              {newPhotos.map((photo) => (
-                <div
-                  key={photo.tempId}
-                  className="surface-card"
-                  style={{ padding: "var(--charcoal-space-25)" }}
-                >
-                  <div className="stack-m">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="caption file-control"
-                      onChange={(event) =>
-                        updateNewPhoto(photo.tempId, {
-                          image: event.target.files?.[0] ?? null,
-                        })
-                      }
-                    />
-                    {photo.image && (
-                      <p
-                        className="caption text-secondary"
-                        style={{ margin: 0 }}
-                      >
-                        Selected: {photo.image.name}
-                      </p>
-                    )}
-                    <TextField
-                      label="Caption"
-                      showLabel
-                      value={photo.caption}
-                      onChange={(value) =>
-                        updateNewPhoto(photo.tempId, { caption: value })
-                      }
-                    />
-                    <TextField
-                      label="Display order"
-                      showLabel
-                      value={photo.displayOrder}
-                      onChange={(value) =>
-                        updateNewPhoto(photo.tempId, { displayOrder: value })
-                      }
-                    />
-                    <div>
-                      <Button
-                        type="button"
-                        variant="Danger"
-                        size="S"
-                        onClick={() => removeNewPhoto(photo.tempId)}
-                      >
-                        Remove row
-                      </Button>
+              {photos.map((photo, index) => {
+                const position = getPhotoPosition(index);
+                const positionLabel =
+                  photo.kind === "existing" && photo.markedForDeletion
+                    ? "Delete"
+                    : position !== null
+                      ? `#${position}`
+                      : "New";
+                const photoLabel =
+                  photo.kind === "existing"
+                    ? `photo ${photo.id}`
+                    : (photo.image?.name ?? "new photo");
+
+                if (photo.kind === "existing") {
+                  return (
+                    <div
+                      key={`existing-${photo.id}`}
+                      className={`surface-card photo-order-card${
+                        photo.markedForDeletion ? " is-marked-for-deletion" : ""
+                      }`}
+                    >
+                      <div className="photo-order-row photo-order-row-edit">
+                        <span className="caption-s text-tertiary photo-order-index">
+                          {positionLabel}
+                        </span>
+                        {photo.imageUrl ? (
+                          <Image
+                            src={photo.imageUrl}
+                            alt={
+                              photo.caption || `Photo ${position ?? index + 1}`
+                            }
+                            width={96}
+                            height={96}
+                            unoptimized
+                            className="photo-order-thumbnail"
+                          />
+                        ) : (
+                          <div className="surface-secondary text-tertiary caption photo-order-thumbnail photo-order-thumbnail-placeholder">
+                            No image
+                          </div>
+                        )}
+                        <div className="photo-order-fields stack-m">
+                          <TextField
+                            label="Caption"
+                            showLabel
+                            value={photo.caption}
+                            onChange={(value) =>
+                              updateExistingPhoto(photo.id, { caption: value })
+                            }
+                            disabled={photo.markedForDeletion}
+                          />
+
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="caption file-control"
+                            disabled={photo.markedForDeletion}
+                            onChange={(event) =>
+                              updateExistingPhoto(photo.id, {
+                                replacementImage:
+                                  event.target.files?.[0] ?? null,
+                              })
+                            }
+                          />
+                          {photo.replacementImage && (
+                            <p className="caption text-secondary photo-order-selected-file">
+                              Replacement: {photo.replacementImage.name}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="photo-order-actions">
+                          <button
+                            type="button"
+                            className="photo-order-icon-button"
+                            aria-label={`Move ${photoLabel} up`}
+                            title="Move up"
+                            disabled={index === 0}
+                            onClick={() => movePhoto(index, -1)}
+                          >
+                            <IconArrowUp aria-hidden />
+                          </button>
+                          <button
+                            type="button"
+                            className="photo-order-icon-button"
+                            aria-label={`Move ${photoLabel} down`}
+                            title="Move down"
+                            disabled={index === photos.length - 1}
+                            onClick={() => movePhoto(index, 1)}
+                          >
+                            <IconArrowDown aria-hidden />
+                          </button>
+                          <button
+                            type="button"
+                            className={`photo-order-icon-button${
+                              photo.markedForDeletion
+                                ? ""
+                                : " photo-order-icon-button-danger"
+                            }`}
+                            aria-label={
+                              photo.markedForDeletion
+                                ? `Undo delete ${photoLabel}`
+                                : `Mark ${photoLabel} for delete`
+                            }
+                            title={
+                              photo.markedForDeletion
+                                ? "Undo delete"
+                                : "Mark for delete"
+                            }
+                            onClick={() =>
+                              updateExistingPhoto(photo.id, {
+                                markedForDeletion: !photo.markedForDeletion,
+                              })
+                            }
+                          >
+                            {photo.markedForDeletion ? (
+                              <IconArrowCcw aria-hidden />
+                            ) : (
+                              <IconDelete aria-hidden />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div
+                    key={`new-${photo.tempId}`}
+                    className="surface-card photo-order-card"
+                  >
+                    <div className="photo-order-row photo-order-row-edit">
+                      <span className="caption-s text-tertiary photo-order-index">
+                        {positionLabel}
+                      </span>
+                      <div className="surface-secondary text-tertiary caption photo-order-thumbnail photo-order-thumbnail-placeholder">
+                        {photo.image ? "Selected" : "No image"}
+                      </div>
+                      <div className="photo-order-fields stack-m">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="caption file-control"
+                          onChange={(event) =>
+                            updateNewPhoto(photo.tempId, {
+                              image: event.target.files?.[0] ?? null,
+                            })
+                          }
+                        />
+                        {photo.image && (
+                          <p className="caption text-secondary photo-order-selected-file">
+                            Selected: {photo.image.name}
+                          </p>
+                        )}
+                        <TextField
+                          label="Caption"
+                          showLabel
+                          value={photo.caption}
+                          onChange={(value) =>
+                            updateNewPhoto(photo.tempId, { caption: value })
+                          }
+                        />
+                      </div>
+
+                      <div className="photo-order-actions">
+                        <button
+                          type="button"
+                          className="photo-order-icon-button"
+                          aria-label={`Move ${photoLabel} up`}
+                          title="Move up"
+                          disabled={index === 0}
+                          onClick={() => movePhoto(index, -1)}
+                        >
+                          <IconArrowUp aria-hidden />
+                        </button>
+                        <button
+                          type="button"
+                          className="photo-order-icon-button"
+                          aria-label={`Move ${photoLabel} down`}
+                          title="Move down"
+                          disabled={index === photos.length - 1}
+                          onClick={() => movePhoto(index, 1)}
+                        >
+                          <IconArrowDown aria-hidden />
+                        </button>
+                        <button
+                          type="button"
+                          className="photo-order-icon-button photo-order-icon-button-danger"
+                          aria-label={`Remove ${photoLabel}`}
+                          title="Remove"
+                          onClick={() => removeNewPhoto(photo.tempId)}
+                        >
+                          <IconDelete aria-hidden />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="caption text-tertiary new-album-photo-empty">
-              No new photos queued.
+              No photos queued.
             </p>
           )}
         </div>
