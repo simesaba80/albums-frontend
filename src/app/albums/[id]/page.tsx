@@ -1,9 +1,11 @@
+import { headers } from "next/headers";
 import { AlbumActions } from "@/components/AlbumActions";
 import { EmptyState } from "@/components/EmptyState";
 import { LinkButton } from "@/components/LinkButton";
 import { PageHeading } from "@/components/PageHeading";
 import { PhotoCard } from "@/components/PhotoCard";
-import { fetchAlbum } from "@/lib/api";
+import { ApiError, fetchAlbum } from "@/lib/api";
+import type { Album } from "@/lib/types";
 
 export default async function AlbumShowPage({
   params,
@@ -11,7 +13,33 @@ export default async function AlbumShowPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const album = await fetchAlbum(id);
+  const requestHeaders = await headers();
+  const authorization = requestHeaders.get("authorization");
+  const cookie = requestHeaders.get("cookie");
+  let album: Album;
+
+  try {
+    album = await fetchAlbum(id, { authorization, cookie });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      return (
+        <EmptyState
+          message="Please log in to view this album."
+          action={
+            <LinkButton
+              href={`/api/auth/basic?returnTo=/albums/${id}`}
+              variant="Primary"
+            >
+              Login
+            </LinkButton>
+          }
+        />
+      );
+    }
+
+    throw error;
+  }
+
   const photos = [...(album.photos ?? [])].sort((a, b) => {
     const orderDiff =
       (a.display_order ?? Number.MAX_SAFE_INTEGER) -

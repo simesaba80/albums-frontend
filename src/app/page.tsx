@@ -1,18 +1,27 @@
-import { fetchAlbums } from "@/lib/api";
-import type { Album } from "@/lib/types";
-import { PageHeading } from "@/components/PageHeading";
-import { LinkButton } from "@/components/LinkButton";
+import { headers } from "next/headers";
 import { AlbumCard } from "@/components/AlbumCard";
 import { EmptyState } from "@/components/EmptyState";
+import { LinkButton } from "@/components/LinkButton";
+import { PageHeading } from "@/components/PageHeading";
+import { ApiError, fetchAlbums } from "@/lib/api";
+import type { Album } from "@/lib/types";
 
 export default async function Home() {
+  const requestHeaders = await headers();
+  const authorization = requestHeaders.get("authorization");
+  const cookie = requestHeaders.get("cookie");
   let albums: Album[] = [];
   let fetchError = false;
+  let requiresLogin = false;
 
   try {
-    albums = await fetchAlbums();
-  } catch {
-    fetchError = true;
+    albums = await fetchAlbums({ authorization, cookie });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      requiresLogin = true;
+    } else {
+      fetchError = true;
+    }
   }
 
   return (
@@ -31,7 +40,16 @@ export default async function Home() {
         </LinkButton>
       </div>
 
-      {fetchError ? (
+      {requiresLogin ? (
+        <EmptyState
+          message="Please log in to view albums."
+          action={
+            <LinkButton href="/api/auth/basic?returnTo=/" variant="Primary">
+              Login
+            </LinkButton>
+          }
+        />
+      ) : fetchError ? (
         <EmptyState message="Failed to load albums. Please try again later." />
       ) : albums.length > 0 ? (
         <div

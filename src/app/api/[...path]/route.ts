@@ -1,7 +1,13 @@
+import type { NextRequest } from "next/server";
+import {
+  BASIC_AUTH_COOKIE_NAME,
+  basicAuthHeader,
+} from "@/lib/basic-auth-session";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const DEFAULT_RAILS_API_URL = "http://localhost:3000";
+const DEFAULT_RAILS_API_URL = "http://localhost:8000";
 const HOP_BY_HOP_HEADERS = new Set([
   "connection",
   "content-encoding",
@@ -15,22 +21,19 @@ type RouteContext = {
   params: Promise<{ path: string[] }>;
 };
 
-async function proxyRailsRequest(request: Request, context: RouteContext) {
-  const basicAuthHeader = getBasicAuthHeader();
-
-  if (!basicAuthHeader) {
-    return Response.json(
-      { error: "Rails Basic authentication is not configured." },
-      { status: 500 },
-    );
-  }
-
+async function proxyRailsRequest(request: NextRequest, context: RouteContext) {
   const targetUrl = await getTargetUrl(request, context);
   const headers = new Headers({
-    Authorization: basicAuthHeader,
     Accept: request.headers.get("accept") ?? "application/json",
   });
+  const authorization =
+    request.headers.get("authorization") ??
+    basicAuthHeader(request.cookies.get(BASIC_AUTH_COOKIE_NAME)?.value);
   const contentType = request.headers.get("content-type");
+
+  if (authorization) {
+    headers.set("Authorization", authorization);
+  }
 
   if (contentType) {
     headers.set("Content-Type", contentType);
@@ -59,15 +62,6 @@ async function getTargetUrl(request: Request, context: RouteContext) {
   return targetUrl;
 }
 
-function getBasicAuthHeader() {
-  const username = process.env.RAILS_BASIC_AUTH_USERNAME;
-  const password = process.env.RAILS_BASIC_AUTH_PASSWORD;
-
-  if (!username || !password) return null;
-
-  return `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
-}
-
 function hasRequestBody(method: string) {
   return !["GET", "HEAD"].includes(method);
 }
@@ -84,22 +78,22 @@ function getResponseHeaders(upstreamHeaders: Headers) {
   return headers;
 }
 
-export function GET(request: Request, context: RouteContext) {
+export function GET(request: NextRequest, context: RouteContext) {
   return proxyRailsRequest(request, context);
 }
 
-export function POST(request: Request, context: RouteContext) {
+export function POST(request: NextRequest, context: RouteContext) {
   return proxyRailsRequest(request, context);
 }
 
-export function PATCH(request: Request, context: RouteContext) {
+export function PATCH(request: NextRequest, context: RouteContext) {
   return proxyRailsRequest(request, context);
 }
 
-export function PUT(request: Request, context: RouteContext) {
+export function PUT(request: NextRequest, context: RouteContext) {
   return proxyRailsRequest(request, context);
 }
 
-export function DELETE(request: Request, context: RouteContext) {
+export function DELETE(request: NextRequest, context: RouteContext) {
   return proxyRailsRequest(request, context);
 }
