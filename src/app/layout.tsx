@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Providers } from "./providers";
-import { LinkButton } from "@/components/LinkButton";
 import "@charcoal-ui/react/dist/index.css";
 import "@charcoal-ui/theme/unstable-css/_variables_light.css";
 import "@charcoal-ui/theme/unstable-css/_variables_dark.css";
@@ -40,9 +39,6 @@ export default function RootLayout({
               >
                 Shared Album
               </Link>
-              <LinkButton href="/login" variant="Navigation" size="S">
-                Login
-              </LinkButton>
             </nav>
           </header>
           <main className="page-container app-main">{children}</main>

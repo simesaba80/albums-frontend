@@ -1,21 +1,33 @@
 import type { Album } from "./types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+const API_PATH_PREFIX = "/api";
+const SERVER_APP_URL =
+  process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3001";
+
+function apiUrl(path: string) {
+  const apiPath = `${API_PATH_PREFIX}${path}`;
+
+  if (typeof window === "undefined") {
+    return new URL(apiPath, SERVER_APP_URL).toString();
+  }
+
+  return apiPath;
+}
 
 export async function fetchAlbums(): Promise<Album[]> {
-  const res = await fetch(`${API_URL}/albums`, { cache: "no-store" });
+  const res = await fetch(apiUrl("/albums"), { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch albums");
   return res.json();
 }
 
 export async function fetchAlbum(id: string): Promise<Album> {
-  const res = await fetch(`${API_URL}/albums/${id}`, { cache: "no-store" });
+  const res = await fetch(apiUrl(`/albums/${id}`), { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch album");
   return res.json();
 }
 
 export async function createAlbum(formData: FormData): Promise<Album> {
-  const res = await fetch(`${API_URL}/albums`, {
+  const res = await fetch(apiUrl("/albums"), {
     method: "POST",
     body: formData,
   });
@@ -30,7 +42,7 @@ export async function updateAlbum(
   id: number | string,
   formData: FormData,
 ): Promise<Album> {
-  const res = await fetch(`${API_URL}/albums/${id}`, {
+  const res = await fetch(apiUrl(`/albums/${id}`), {
     method: "PATCH",
     body: formData,
   });
@@ -44,7 +56,7 @@ export async function updateAlbum(
 }
 
 export async function deleteAlbum(id: number | string): Promise<void> {
-  const res = await fetch(`${API_URL}/albums/${id}`, {
+  const res = await fetch(apiUrl(`/albums/${id}`), {
     method: "DELETE",
   });
 
@@ -60,41 +72,4 @@ export async function deleteAlbum(id: number | string): Promise<void> {
 
     throw new Error(message);
   }
-}
-
-export async function login(
-  emailAddress: string,
-  password: string,
-): Promise<Response> {
-  return fetch(`${API_URL}/session`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email_address: emailAddress, password }),
-    credentials: "include",
-  });
-}
-
-export async function requestPasswordReset(
-  emailAddress: string,
-): Promise<Response> {
-  return fetch(`${API_URL}/passwords`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email_address: emailAddress }),
-  });
-}
-
-export async function resetPassword(
-  token: string,
-  password: string,
-  passwordConfirmation: string,
-): Promise<Response> {
-  return fetch(`${API_URL}/passwords/${token}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      password,
-      password_confirmation: passwordConfirmation,
-    }),
-  });
 }
