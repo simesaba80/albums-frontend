@@ -192,36 +192,66 @@ export default function AlbumEditPage() {
       formData.append("album[cover_image]", coverImage);
     }
 
-    let photoAttributeIndex = 0;
+    // Previous backend format:
+    // let photoAttributeIndex = 0;
+    // let displayOrder = 0;
+    //
+    // photos.forEach((photo) => {
+    //   const baseKey = `album[photos_attributes][${photoAttributeIndex}]`;
+    //
+    //   if (photo.kind === "existing") {
+    //     formData.append(`${baseKey}[id]`, String(photo.id));
+    //
+    //     if (photo.markedForDeletion) {
+    //       formData.append(`${baseKey}[_destroy]`, "1");
+    //     } else {
+    //       formData.append(`${baseKey}[caption]`, photo.caption);
+    //       formData.append(`${baseKey}[display_order]`, String(displayOrder));
+    //       if (photo.replacementImage) {
+    //         formData.append(`${baseKey}[image]`, photo.replacementImage);
+    //       }
+    //       displayOrder += 1;
+    //     }
+    //
+    //     photoAttributeIndex += 1;
+    //     return;
+    //   }
+    //
+    //   if (!photo.image) return;
+    //
+    //   formData.append(`${baseKey}[image]`, photo.image);
+    //   formData.append(`${baseKey}[caption]`, photo.caption);
+    //   formData.append(`${baseKey}[display_order]`, String(displayOrder));
+    //   photoAttributeIndex += 1;
+    //   displayOrder += 1;
+    // });
     let displayOrder = 0;
 
     photos.forEach((photo) => {
-      const baseKey = `album[photos_attributes][${photoAttributeIndex}]`;
-
       if (photo.kind === "existing") {
-        formData.append(`${baseKey}[id]`, String(photo.id));
-
         if (photo.markedForDeletion) {
-          formData.append(`${baseKey}[_destroy]`, "1");
-        } else {
-          formData.append(`${baseKey}[caption]`, photo.caption);
-          formData.append(`${baseKey}[display_order]`, String(displayOrder));
-          if (photo.replacementImage) {
-            formData.append(`${baseKey}[image]`, photo.replacementImage);
-          }
-          displayOrder += 1;
+          formData.append("photos[destroy][][id]", String(photo.id));
+          return;
         }
 
-        photoAttributeIndex += 1;
+        formData.append("photos[update][][id]", String(photo.id));
+        formData.append("photos[update][][caption]", photo.caption);
+        formData.append(
+          "photos[update][][display_order]",
+          String(displayOrder),
+        );
+        if (photo.replacementImage) {
+          formData.append("photos[update][][image]", photo.replacementImage);
+        }
+        displayOrder += 1;
         return;
       }
 
       if (!photo.image) return;
 
-      formData.append(`${baseKey}[image]`, photo.image);
-      formData.append(`${baseKey}[caption]`, photo.caption);
-      formData.append(`${baseKey}[display_order]`, String(displayOrder));
-      photoAttributeIndex += 1;
+      formData.append("photos[create][][image]", photo.image);
+      formData.append("photos[create][][caption]", photo.caption);
+      formData.append("photos[create][][display_order]", String(displayOrder));
       displayOrder += 1;
     });
 
